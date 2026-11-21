@@ -1,0 +1,85 @@
+/* LinguaAI - custom styling.
+   Colours use translucent neutrals so every component reads well in both the
+   light and the dark Streamlit theme (switch via the app menu -> Settings). */
+
+:root {
+  --lg-blue: #4F6BFF;
+  --lg-purple: #8B5CF6;
+  --lg-navy: #0F1B3D;
+  --lg-border: rgba(127, 127, 127, 0.28);
+  --lg-surface: rgba(127, 127, 127, 0.07);
+  --lg-radius: 16px;
+}
+
+.block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1200px; }
+h1, h2, h3 { letter-spacing: -0.01em; }
+
+/* ---- hero banner ---- */
+.lg-hero {
+  background: linear-gradient(135deg, var(--lg-navy) 0%, #24378C 55%, #5B3FD0 100%);
+  color: #FFFFFF;
+  border-radius: 20px;
+  padding: 2rem 2.2rem;
+  margin-bottom: 1.4rem;
+}
+.lg-hero h1 { color: #FFFFFF; margin: 0 0 .35rem 0; font-size: 2rem; }
+.lg-hero p  { color: rgba(255,255,255,.82); margin: 0; font-size: 1.02rem; }
+
+/* ---- KPI cards ---- */
+.lg-kpi {
+  border: 1px solid var(--lg-border);
+  background: var(--lg-surface);
+  border-radius: var(--lg-radius);
+  padding: 1.1rem 1.2rem;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.lg-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(79, 107, 255, .18); }
+.lg-kpi .icon  { font-size: 1.5rem; }
+.lg-kpi .value { font-size: 1.9rem; font-weight: 700; line-height: 1.15; margin-top: .25rem; }
+.lg-kpi .label { font-size: .85rem; opacity: .7; margin-top: .1rem; }
+
+/* ---- generic cards / text blocks ---- */
+.lg-empty {
+  border: 1px dashed var(--lg-border);
+  border-radius: var(--lg-radius);
+  padding: 2rem 1rem;
+  text-align: center;
+  opacity: .85;
+}
+.lg-empty .title { font-weight: 600; font-size: 1.05rem; margin-bottom: .3rem; }
+
+.lg-text {
+  border: 1px solid var(--lg-border);
+  background: var(--lg-surface);
+  border-radius: 12px;
+  padding: .75rem .9rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+.lg-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; opacity: .65; margin-bottom: .25rem; }
+
+.lg-pill {
+  display: inline-block;
+  padding: .15rem .65rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(79,107,255,.18), rgba(139,92,246,.18));
+  border: 1px solid rgba(79,107,255,.35);
+}
+
+.lg-footer { text-align: center; opacity: .65; font-size: .85rem; padding-top: 1.5rem; }
+
+/* ---- Streamlit tweaks ---- */
+div[data-testid="stVerticalBlockBorderWrapper"] { border-radius: var(--lg-radius); }
+.stButton > button, .stDownloadButton > button { border-radius: 10px; font-weight: 600; transition: transform .1s ease; }
+.stButton > button:hover { transform: translateY(-1px); }
+textarea { border-radius: 12px !important; }
+
+/* ---- responsive ---- */
+@media (max-width: 768px) {
+  .lg-hero { padding: 1.3rem 1.2rem; }
+  .lg-hero h1 { font-size: 1.5rem; }
+  .lg-kpi .value { font-size: 1.5rem; }
+}
