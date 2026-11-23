@@ -20,16 +20,22 @@ def render_sidebar() -> None:
     if LOGO.exists():
         st.logo(str(LOGO), size="large")
     with st.sidebar:
-        st.markdown("### LinguaAI")
+        st.markdown(
+            '<div class="lg-brand"><div class="mark">LA</div><div class="name">LinguaAI</div></div>',
+            unsafe_allow_html=True,
+        )
         st.caption("Smart Language Translation Platform")
         st.divider()
         st.caption(f"{len(LANGUAGES)} languages supported")
         st.caption("Tip: switch light/dark theme from the ⋮ menu → Settings.")
 
 
-def page_header(title: str, subtitle: str) -> None:
+def page_header(title: str, subtitle: str, chips: list[str] | None = None) -> None:
+    chips_html = ""
+    if chips:
+        chips_html = '<div class="lg-chips">' + "".join(f'<span class="lg-chip">{c}</span>' for c in chips) + "</div>"
     st.markdown(
-        f'<div class="lg-hero"><h1>{title}</h1><p>{subtitle}</p></div>',
+        f'<div class="lg-hero"><h1>{title}</h1><p>{subtitle}</p>{chips_html}</div>',
         unsafe_allow_html=True,
     )
 

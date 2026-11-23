@@ -1,4 +1,4 @@
-"""Translation workspace."""
+"""Translation workspace - side-by-side input and output panels."""
 import sqlite3
 
 import streamlit as st
@@ -11,6 +11,8 @@ from database.db_manager import get_db
 from services.translator import (
     AUTO_DETECT, LANGUAGES, MAX_INPUT_CHARS, TranslationError, get_service, swap_languages,
 )
+
+EXAMPLES = ["Good morning!", "Thank you so much", "Where is the station?", "How are you today?"]
 
 ss = st.session_state
 ss.setdefault("tr_src", AUTO_DETECT)
@@ -52,64 +54,82 @@ def on_clear():
     ss.pop("audio_cache", None)
 
 
+def use_example(text):
+    ss["tr_text"] = text
+    ss.pop("tr_result", None)
+    ss.pop("audio_cache", None)
+
+
 page_header("Translator", "Type or paste text, choose languages and translate.")
 
-c_src, c_swap, c_tgt = st.columns([5, 1, 5])
-c_src.selectbox("From", source_options(), key="tr_src")
-c_swap.write("")
-c_swap.button("⇄", on_click=on_swap, help="Swap languages", use_container_width=True)
-c_tgt.selectbox("To", target_options(), key="tr_tgt")
+# ---- language bar
+with st.container(border=True):
+    c_src, c_swap, c_tgt = st.columns([5, 1, 5])
+    c_src.selectbox("From", source_options(), key="tr_src")
+    c_swap.write("")
+    c_swap.button("⇄", on_click=on_swap, help="Swap languages", use_container_width=True)
+    c_tgt.selectbox("To", target_options(), key="tr_tgt")
 if "tr_notice" in ss:
     st.info(ss.pop("tr_notice"))
 
-st.text_area(
-    "Text to translate", key="tr_text", height=180, max_chars=MAX_INPUT_CHARS,
-    placeholder="Enter text here...",
-)
-length = len(ss["tr_text"])
-st.caption(f"{length:,} / {MAX_INPUT_CHARS:,} characters")
+# ---- panels
+left, right = st.columns(2)
 
-b1, b2, _ = st.columns([2, 1, 4])
-translate_clicked = b1.button("Translate", type="primary", use_container_width=True)
-b2.button("Clear", on_click=on_clear, use_container_width=True)
+with left, st.container(border=True):
+    st.markdown('<div class="lg-label">Your text</div>', unsafe_allow_html=True)
+    st.text_area(
+        "Text to translate", key="tr_text", height=190, max_chars=MAX_INPUT_CHARS,
+        placeholder="Enter text here...", label_visibility="collapsed",
+    )
+    st.caption(f"{len(ss['tr_text']):,} / {MAX_INPUT_CHARS:,} characters")
+    b1, b2, _ = st.columns([2, 1, 2])
+    translate_clicked = b1.button("Translate →", type="primary", use_container_width=True)
+    b2.button("Clear", on_click=on_clear, use_container_width=True)
 
-if translate_clicked:
-    try:
-        with st.spinner("Translating..."):
-            res = get_service().translate(ss["tr_text"], ss["tr_src"], ss["tr_tgt"])
-    except TranslationError as exc:
-        st.error(str(exc))
-    else:
-        src_name = ss["tr_src"] if ss["tr_src"] != AUTO_DETECT else (res.detected_name or AUTO_DETECT)
-        ss["tr_result"] = {
-            "original": ss["tr_text"].strip(), "translated": res.translated_text,
-            "source": src_name, "target": ss["tr_tgt"],
-            "source_code": res.source_code if res.source_code != "auto" else res.detected_code,
-            "target_code": res.target_code, "saved": False,
-        }
-        ss.pop("audio_cache", None)
+    if translate_clicked:
         try:
-            get_db().add_translation(ss["tr_result"]["original"], res.translated_text, src_name, ss["tr_tgt"])
-        except sqlite3.Error as exc:
-            st.warning(f"Translation done, but it could not be saved to history: {exc}")
+            with st.spinner("Translating..."):
+                res = get_service().translate(ss["tr_text"], ss["tr_src"], ss["tr_tgt"])
+        except TranslationError as exc:
+            st.error(str(exc))
+        else:
+            src_name = ss["tr_src"] if ss["tr_src"] != AUTO_DETECT else (res.detected_name or AUTO_DETECT)
+            ss["tr_result"] = {
+                "original": ss["tr_text"].strip(), "translated": res.translated_text,
+                "source": src_name, "target": ss["tr_tgt"],
+                "source_code": res.source_code if res.source_code != "auto" else res.detected_code,
+                "target_code": res.target_code, "saved": False,
+            }
+            ss.pop("audio_cache", None)
+            try:
+                get_db().add_translation(ss["tr_result"]["original"], res.translated_text, src_name, ss["tr_tgt"])
+            except sqlite3.Error as exc:
+                st.warning(f"Translation done, but it could not be saved to history: {exc}")
 
 result = ss.get("tr_result")
-if result:
-    st.divider()
-    if ss["tr_src"] == AUTO_DETECT and result["source"] != AUTO_DETECT:
-        st.caption(f"Detected source language: **{result['source']}**")
-    left, right = st.columns(2)
-    with left:
-        text_panel(f"Original · {result['source']}", result["original"])
-        st.caption(f"{len(result['original']):,} characters")
-    with right:
-        text_panel(f"Translation · {result['target']}", result["translated"])
-        st.caption(f"{len(result['translated']):,} characters")
 
-    a1, a2, _ = st.columns([1, 2, 3])
-    with a1:
-        copy_button(result["translated"])
-    with a2:
-        save_favorite_button(result["original"], result["translated"], result["source"], result["target"], "tr_fav")
+with right, st.container(border=True):
+    if result:
+        detected_note = ""
+        if ss["tr_src"] == AUTO_DETECT and result["source"] != AUTO_DETECT:
+            detected_note = f" (detected {result['source']})"
+        text_panel(f"Translation · {result['target']}{detected_note}", result["translated"], tall=True)
+        st.caption(f"{len(result['translated']):,} characters")
+        a1, a2 = st.columns([1, 1.6])
+        with a1:
+            copy_button(result["translated"])
+        with a2:
+            save_favorite_button(result["original"], result["translated"], result["source"], result["target"], "tr_fav")
+    else:
+        text_panel(f"Translation · {ss['tr_tgt']}", "Your translation will appear here.", tall=True, placeholder=True)
+
+# ---- examples (only while the input is empty)
+if not ss["tr_text"].strip():
+    st.caption("Try an example")
+    for col, example in zip(st.columns(len(EXAMPLES)), EXAMPLES):
+        col.button(example, key=f"ex_{example}", on_click=use_example, args=(example,), use_container_width=True)
+
+# ---- text-to-speech
+if result:
     st.write("")
     audio_controls("tr", result["original"], result["source_code"], result["translated"], result["target_code"])

@@ -22,10 +22,11 @@ def target_options() -> list[str]:
     return list(LANGUAGES.keys())
 
 
-def text_panel(label: str, text: str) -> None:
+def text_panel(label: str, text: str, tall: bool = False, placeholder: bool = False) -> None:
     """Read-only text block (HTML-escaped)."""
+    css = "lg-text" + (" tall" if tall else "") + (" placeholder" if placeholder else "")
     st.markdown(
-        f'<div class="lg-label">{html.escape(label)}</div><div class="lg-text">{html.escape(text)}</div>',
+        f'<div class="lg-label">{html.escape(label)}</div><div class="{css}">{html.escape(text)}</div>',
         unsafe_allow_html=True,
     )
 
