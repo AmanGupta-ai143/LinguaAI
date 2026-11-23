@@ -166,4 +166,6 @@ div[data-baseweb="select"] > div { border-radius: 12px; }
   .lg-hero h1 { font-size: 1.55rem; }
   .lg-kpi .value { font-size: 1.6rem; }
   .lg-steps, .lg-recent .row { grid-template-columns: 1fr; }
+  .lg-text.tall { min-height: 120px; }
+  .block-container { padding-left: 1rem; padding-right: 1rem; }
 }

@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="LinguaAI - Smart Language Translation Platform",
     page_icon="🌐",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 
 load_css()

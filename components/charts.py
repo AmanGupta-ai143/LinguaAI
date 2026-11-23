@@ -51,8 +51,8 @@ def _layout(fig: go.Figure, title: str, x_title: Optional[str], y_title: Optiona
         bargap=0.35,
         hoverlabel=dict(font_size=13),
     )
-    fig.update_xaxes(title=x_title, gridcolor=GRID, zeroline=False, showline=False)
-    fig.update_yaxes(title=y_title, gridcolor=GRID, zeroline=False, showline=False)
+    fig.update_xaxes(title=x_title, gridcolor=GRID, zeroline=False, showline=False, automargin=True)
+    fig.update_yaxes(title=y_title, gridcolor=GRID, zeroline=False, showline=False, automargin=True)
     return fig
 
 
@@ -114,7 +114,7 @@ def distribution_chart(dist: pd.DataFrame) -> Optional[go.Figure]:
         go.Pie(
             labels=dist["language"], values=dist["translations"], hole=0.55, sort=False,
             marker=dict(colors=slice_colors, line=dict(color="rgba(127,127,127,0.0)", width=2)),
-            textinfo="label+percent", textposition="outside",
+            textinfo="percent", textposition="inside", insidetextorientation="horizontal",
             hovertemplate="%{label}<br><b>%{value}</b> translations (%{percent})<extra></extra>",
         )
     )
