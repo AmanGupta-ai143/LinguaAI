@@ -22,7 +22,10 @@ PALETTES = {
     "dark": ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9"],
 }
 OTHER_COLOR = "#898781"   # neutral grey for the folded "Other" slice
-GRID = "rgba(127,127,127,0.22)"
+GRID = "rgba(127,127,127,0.18)"
+
+# Hide Plotly's floating toolbar - it overlaps legends and looks cluttered.
+PLOT_CONFIG = {"displayModeBar": False, "displaylogo": False}
 
 
 def _theme_type() -> str:
@@ -38,6 +41,38 @@ def _theme_type() -> str:
 
 def palette() -> list[str]:
     return PALETTES[_theme_type()]
+
+
+def _rgba(hex_color: str, alpha: float) -> str:
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def _bar_marker(color: str):
+    """Bar marker with rounded corners (needs plotly >= 5.24; falls back silently)."""
+    try:
+        go.bar.Marker(cornerradius=6)          # raises ValueError on older plotly versions
+        return dict(color=color, cornerradius=6)
+    except (ValueError, TypeError, AttributeError):
+        return dict(color=color)
+
+
+def _labels(values) -> list[str]:
+    """Value labels for bars - blank for zero so empty categories stay clean."""
+    return [str(int(v)) if v else "" for v in values]
+
+
+def _count_axis(fig: go.Figure, max_value: float, axis: str = "y") -> None:
+    """Whole-number ticks with headroom so labels above the bars are never clipped."""
+    top = max_value + (1 if max_value < 5 else max_value * 0.18)
+    update = fig.update_yaxes if axis == "y" else fig.update_xaxes
+    update(range=[0, top], tickformat="d", dtick=1 if max_value <= 5 else None)
+
+
+def _gap(n_categories: int) -> float:
+    """Few categories -> larger gap so bars never become giant blocks."""
+    return 0.35 if n_categories >= 6 else (0.5 if n_categories >= 3 else 0.62)
 
 
 def _layout(fig: go.Figure, title: str, x_title: Optional[str], y_title: Optional[str], height: int = 340) -> go.Figure:
@@ -65,28 +100,13 @@ def activity_chart(data: pd.DataFrame, period: str) -> Optional[go.Figure]:
     fig = go.Figure(
         go.Scatter(
             x=data["period"], y=data["translations"], mode="lines+markers", name="Translations",
-            line=dict(color=color, width=2.5, shape="linear"),
-            marker=dict(size=8, color=color, line=dict(width=2, color="rgba(127,127,127,0.0)")),
+            line=dict(color=color, width=3), fill="tozeroy", fillcolor=_rgba(color, 0.12),
+            marker=dict(size=9, color=color),
             hovertemplate="%{x|" + fmt + "}<br><b>%{y}</b> translations<extra></extra>",
         )
     )
     _layout(fig, f"Translation activity - {period.lower()}", "Date", "Translations")
-    fig.update_yaxes(rangemode="tozero", dtick=1 if data["translations"].max() <= 8 else None)
-    fig.update_layout(showlegend=False)
-    return fig
-
-
-def _bar_h(data: pd.DataFrame, title: str, x_title: str, y_title: str, color: str) -> go.Figure:
-    data = data.iloc[::-1]  # biggest bar on top
-    fig = go.Figure(
-        go.Bar(
-            x=data["translations"], y=data["language"], orientation="h", name="Translations",
-            marker=dict(color=color), text=data["translations"], textposition="outside",
-            cliponaxis=False, hovertemplate="%{y}<br><b>%{x}</b> translations<extra></extra>",
-        )
-    )
-    _layout(fig, title, x_title, y_title, height=max(300, 60 + 38 * len(data)))
-    fig.update_xaxes(rangemode="tozero")
+    _count_axis(fig, float(data["translations"].max()))
     fig.update_layout(showlegend=False)
     return fig
 
@@ -95,7 +115,19 @@ def most_used_chart(counts: pd.DataFrame, top_n: int = 8) -> Optional[go.Figure]
     """Chart 2 - horizontal bars of the most frequently chosen target languages."""
     if counts.empty:
         return None
-    return _bar_h(counts.head(top_n), "Most used target languages", "Translations", "Target language", palette()[0])
+    data = counts.head(top_n).iloc[::-1]  # biggest bar on top
+    fig = go.Figure(
+        go.Bar(
+            x=data["translations"], y=data["language"], orientation="h", name="Translations",
+            marker=_bar_marker(palette()[0]), text=_labels(data["translations"]), textposition="outside",
+            width=0.5, cliponaxis=False, hovertemplate="%{y}<br><b>%{x}</b> translations<extra></extra>",
+        )
+    )
+    _layout(fig, "Most used target languages", "Translations", "Target language",
+            height=max(260, 110 + 44 * len(data)))
+    _count_axis(fig, float(data["translations"].max()), axis="x")
+    fig.update_layout(showlegend=False, bargap=_gap(len(data)))
+    return fig
 
 
 def distribution_chart(dist: pd.DataFrame) -> Optional[go.Figure]:
@@ -112,7 +144,7 @@ def distribution_chart(dist: pd.DataFrame) -> Optional[go.Figure]:
             i += 1
     fig = go.Figure(
         go.Pie(
-            labels=dist["language"], values=dist["translations"], hole=0.55, sort=False,
+            labels=dist["language"], values=dist["translations"], hole=0.58, sort=False,
             marker=dict(colors=slice_colors, line=dict(color="rgba(127,127,127,0.0)", width=2)),
             textinfo="percent", textposition="inside", insidetextorientation="horizontal",
             hovertemplate="%{label}<br><b>%{value}</b> translations (%{percent})<extra></extra>",
@@ -134,13 +166,13 @@ def source_target_chart(data: pd.DataFrame, top_n: int = 8) -> Optional[go.Figur
     for role, color in (("Source", colors[0]), ("Target", colors[1])):
         part = data[data["role"] == role]
         fig.add_bar(
-            x=part["language"].astype(str), y=part["translations"], name=role, marker=dict(color=color),
-            text=part["translations"], textposition="outside", cliponaxis=False,
+            x=part["language"].astype(str), y=part["translations"], name=role, marker=_bar_marker(color),
+            text=_labels(part["translations"]), textposition="outside", cliponaxis=False,
             hovertemplate="%{x} as " + role.lower() + "<br><b>%{y}</b> translations<extra></extra>",
         )
     _layout(fig, "Source vs target languages", "Language", "Translations")
-    fig.update_layout(barmode="group")
-    fig.update_yaxes(rangemode="tozero")
+    _count_axis(fig, float(data["translations"].max()))
+    fig.update_layout(barmode="group", bargap=_gap(len(keep)), bargroupgap=0.08)
     return fig
 
 
@@ -150,12 +182,13 @@ def weekday_chart(data: pd.DataFrame) -> Optional[go.Figure]:
         return None
     fig = go.Figure(
         go.Bar(
-            x=data["weekday"], y=data["translations"], name="Translations", marker=dict(color=palette()[2]),
-            text=data["translations"], textposition="outside", cliponaxis=False,
-            hovertemplate="%{x}<br><b>%{y}</b> translations<extra></extra>",
+            x=data["weekday"].str[:3], y=data["translations"], name="Translations",
+            marker=_bar_marker(palette()[2]), text=_labels(data["translations"]), textposition="outside",
+            width=0.55, cliponaxis=False, customdata=data["weekday"],
+            hovertemplate="%{customdata}<br><b>%{y}</b> translations<extra></extra>",
         )
     )
     _layout(fig, "Usage by weekday", "Weekday", "Translations")
-    fig.update_yaxes(rangemode="tozero")
-    fig.update_layout(showlegend=False)
+    _count_axis(fig, float(data["translations"].max()))
+    fig.update_layout(showlegend=False, bargap=0.35)
     return fig

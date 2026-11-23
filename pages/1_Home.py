@@ -65,7 +65,7 @@ else:
         if fig is None:
             empty_state(*NO_DATA)
         else:
-            st.plotly_chart(fig, use_container_width=True, key=key)
+            st.plotly_chart(fig, use_container_width=True, key=key, config=charts.PLOT_CONFIG)
 
     # activity over time
     with st.container(border=True):

@@ -30,6 +30,9 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
 }
 .block-container { padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1240px; }
 footer { visibility: hidden; }
+/* Hide the top-right Share / star / edit / GitHub icons and the deploy button; keep the ⋮ menu (theme switch). */
+[data-testid="stToolbarActions"], [data-testid="stAppDeployButton"], [data-testid="stStatusWidget"],
+[data-testid="stDecoration"], [data-testid="manage-app-button"] { display: none !important; }
 
 /* background-image (not `background`) keeps Streamlit's own opaque sidebar colour underneath,
    so the sidebar never turns see-through when it overlays the page on phones. */
@@ -144,7 +147,7 @@ a[data-testid="stSidebarNavLink"][aria-current="page"] {
 
 .lg-recent { border: 1px solid var(--lg-border); background: var(--lg-surface); border-radius: 14px; padding: .8rem 1rem; margin-bottom: .6rem; }
 .lg-recent .meta { font-size: .78rem; opacity: .6; margin-bottom: .35rem; }
-.lg-recent .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.lg-recent .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; line-height: 1.55; }
 .lg-recent .arrow { opacity: .5; }
 
 .lg-footer { text-align: center; opacity: .6; font-size: .85rem; padding-top: 2rem; }
