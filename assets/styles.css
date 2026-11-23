@@ -31,8 +31,10 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
 .block-container { padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1240px; }
 footer { visibility: hidden; }
 
+/* background-image (not `background`) keeps Streamlit's own opaque sidebar colour underneath,
+   so the sidebar never turns see-through when it overlays the page on phones. */
 section[data-testid="stSidebar"] {
-  background: linear-gradient(180deg, rgba(79, 107, 255, 0.09), rgba(139, 92, 246, 0.07));
+  background-image: linear-gradient(180deg, rgba(79, 107, 255, 0.09), rgba(139, 92, 246, 0.07));
   border-right: 1px solid var(--lg-border);
 }
 a[data-testid="stSidebarNavLink"] {
