@@ -20,6 +20,7 @@ takes text in one language, sends it to a real translation API, and returns the 
 | **Documents** | TXT / PDF / DOCX upload, text extraction, chunked translation with progress bar, download |
 | **Text-to-speech** | Listen to original and translated text (gTTS), graceful message for unsupported cases |
 | **Accounts** | Sign up / sign in (salted password hashes) or continue as a guest; every user sees only their own data |
+| **Theme** | Dark-mode toggle at the top of every page (per visitor) |
 | **Search** | Search box on every page + a results page covering history and favorites |
 | **History** | Database-backed list with search, pagination, reuse, delete, clear-all |
 | **Favorites** | Save / search / reuse / remove |
@@ -169,7 +170,7 @@ raising `ValidationError`, `APIError`, `APITimeoutError` or `QuotaExceededError`
 - Scanned (image-only) PDFs are not supported (no OCR). Document limit: 5 MB / 20,000 characters.
 - Persistence on Streamlit Community Cloud needs the hosted-database secrets above; otherwise data is lost on restart.
 - Accounts are deliberately simple: username + password, no e-mail verification and **no password recovery**. Guest data is deleted after 24 hours.
-- There is no custom in-app theme button: Streamlit has no supported per-user theme API. Both light and dark themes are defined and chosen via ⋮ → Settings → Theme (default: follows the device).
+- The 🌙 Dark mode toggle at the top of each page is a per-visitor visual switch (Streamlit has no supported per-user theme API, so the page is colour-inverted with deliberate colours restored); Streamlit's own ⋮ → Settings → Theme also works.
 - Text-to-speech needs internet access (gTTS calls Google's service).
 
 ## Future enhancements

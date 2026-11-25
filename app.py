@@ -9,6 +9,7 @@ import streamlit as st
 
 from components.auth import is_logged_in, render_account_box, render_login
 from components.sidebar import load_css, render_sidebar
+from components.theme import render_theme_toggle
 from database.db_manager import get_db
 
 st.set_page_config(
@@ -50,6 +51,8 @@ navigation = st.navigation(
         st.Page("pages/6_About.py", title="About", icon="ℹ️"),
     ]
 )
+
+render_theme_toggle()
 
 if st.session_state.pop("_goto_search", False):
     st.switch_page(search_page)

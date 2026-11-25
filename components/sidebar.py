@@ -39,7 +39,6 @@ def render_sidebar() -> None:
         )
         st.divider()
         st.caption(f"{len(LANGUAGES)} languages supported")
-        st.caption("Theme: follows your device. Change it in ⋮ → Settings → Theme.")
 
 
 def page_header(title: str, subtitle: str, chips: list[str] | None = None) -> None:

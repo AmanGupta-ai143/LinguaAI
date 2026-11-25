@@ -7,6 +7,7 @@ import time
 import streamlit as st
 
 from components.sidebar import page_header
+from components.theme import render_theme_toggle
 from database.db_manager import GUEST_LIFETIME_HOURS, ScopedDB, get_db
 
 HIDE_SIDEBAR = """
@@ -42,6 +43,7 @@ def _login(user: dict) -> None:
 def render_login() -> None:
     """Full-page sign-in screen. Call ``st.stop()`` afterwards."""
     st.markdown(HIDE_SIDEBAR, unsafe_allow_html=True)
+    render_theme_toggle()
     page_header(
         "Welcome to LinguaAI 👋",
         "Sign in to keep your translation history, or try the app right away as a guest.",
