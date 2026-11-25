@@ -19,6 +19,7 @@ import sqlite3
 from typing import Any, Optional, Sequence
 
 import requests
+from urllib.parse import urlsplit
 
 TIMEOUT = (5, 25)
 
@@ -28,13 +29,15 @@ class RemoteDBError(sqlite3.Error):
 
 
 def normalize_url(url: str) -> str:
-    url = url.strip().rstrip("/")
+    """Accept the URL as pasted (quotes, spaces, libsql://, trailing path/query) and keep only scheme + host."""
+    url = url.strip().strip("\"'").strip()
     for prefix in ("libsql://", "wss://", "ws://"):
         if url.startswith(prefix):
             url = "https://" + url[len(prefix):]
     if not url.startswith(("https://", "http://")):
         url = "https://" + url
-    return url
+    parts = urlsplit(url)
+    return f"{parts.scheme}://{parts.netloc}"
 
 
 def remote_config_from_env() -> Optional[tuple[str, str]]:
@@ -164,6 +167,11 @@ class RemoteConnection:
             raise RemoteDBError("Could not reach the database service. Check the network and the database URL.") from exc
         if resp.status_code in (401, 403):
             raise RemoteDBError("Database authentication failed - check TURSO_AUTH_TOKEN.")
+        if resp.status_code == 404:
+            raise RemoteDBError(
+                f"Database not found (HTTP 404) at {urlsplit(self.url).netloc}. "
+                "Check TURSO_DATABASE_URL - copy it again from the Turso dashboard."
+            )
         if resp.status_code >= 400:
             detail = ""
             try:

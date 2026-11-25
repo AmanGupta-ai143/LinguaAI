@@ -19,6 +19,10 @@ def test_url_normalisation():
     assert normalize_url("libsql://db-org.turso.io") == "https://db-org.turso.io"
     assert normalize_url("https://db-org.turso.io/") == "https://db-org.turso.io"
     assert normalize_url("db-org.turso.io") == "https://db-org.turso.io"
+    # common paste mistakes
+    assert normalize_url('  "libsql://db-org.turso.io"\n') == "https://db-org.turso.io"
+    assert normalize_url("https://db-org.turso.io/v2/pipeline") == "https://db-org.turso.io"
+    assert normalize_url("libsql://db-org.turso.io?authToken=abc") == "https://db-org.turso.io"
 
 
 def test_request_format_and_value_decoding():
@@ -74,6 +78,13 @@ def test_server_errors_and_garbage_responses():
     session.post.return_value = FakeResponse(200, {"unexpected": True})
     with pytest.raises(RemoteDBError, match="Unexpected"):
         conn(session).execute("SELECT 1")
+
+
+def test_404_names_the_host_so_typos_are_visible():
+    session = MagicMock()
+    session.post.return_value = FakeResponse(404, {})
+    with pytest.raises(RemoteDBError, match=r"HTTP 404\) at wrong-db-org\.turso\.io"):
+        conn(session, url="libsql://wrong-db-org.turso.io").execute("SELECT 1")
 
 
 def test_remote_errors_are_catchable_as_sqlite_errors():
