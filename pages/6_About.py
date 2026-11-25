@@ -30,6 +30,8 @@ st.subheader("Features")
 st.markdown(
     "- Text translation with auto-detection, language swap, copy, and text-to-speech\n"
     "- Document translation (TXT, PDF, DOCX) with chunked processing and download\n"
+    "- Accounts and guest mode - every user sees only their own history and statistics\n"
+    "- Global search across history and favorites\n"
     "- Translation history with search, reuse and delete\n"
     "- Favorites with search\n"
     "- Dashboard with six chart types computed from real stored data\n"
@@ -52,8 +54,9 @@ st.subheader("Known limitations & future improvements")
 st.markdown(
     "- MyMemory's free tier has a daily quota and modest quality for long or specialised text.\n"
     "- Scanned (image-only) PDFs are not supported - OCR would be a future addition.\n"
-    "- SQLite is local; a hosted deployment would need a persistent database (e.g. PostgreSQL).\n"
-    "- Planned: Google Cloud Translation / Microsoft Translator providers, user accounts, "
+    "- Cloud history needs the optional hosted database (Turso); without it, data is temporary.\n"
+    "- Accounts are simple (username + password, no recovery); guest data is deleted after 24 hours.\n"
+    "- Planned: Google Cloud Translation / Microsoft Translator providers, e-mail verification and password reset, "
     "translated DOCX export, translation memory."
 )
 

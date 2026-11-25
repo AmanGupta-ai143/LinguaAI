@@ -9,7 +9,7 @@ from typing import Optional
 import streamlit as st
 import streamlit.components.v1 as components
 
-from database.db_manager import get_db
+from components.auth import current_db
 from services import speech
 from services.translator import AUTO_DETECT, CODE_TO_NAME, LANGUAGES
 
@@ -86,7 +86,7 @@ def audio_controls(key: str, original: str, original_code: Optional[str], transl
 def save_favorite_button(original: str, translated: str, source: str, target: str, key: str) -> None:
     if st.button("⭐ Save to favorites", key=key, use_container_width=True):
         try:
-            _, created = get_db().add_favorite(original, translated, source, target)
+            _, created = current_db().add_favorite(original, translated, source, target)
             st.toast("Saved to favorites" if created else "Already in your favorites", icon="⭐")
         except (sqlite3.Error, ValueError) as exc:
             st.error(f"Could not save favorite: {exc}")

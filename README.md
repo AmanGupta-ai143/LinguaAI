@@ -19,7 +19,9 @@ takes text in one language, sends it to a real translation API, and returns the 
 | **Translator** | 19 languages, auto-detect, swap, character counter, copy, clear, loading spinner |
 | **Documents** | TXT / PDF / DOCX upload, text extraction, chunked translation with progress bar, download |
 | **Text-to-speech** | Listen to original and translated text (gTTS), graceful message for unsupported cases |
-| **History** | SQLite-backed list with search, pagination, reuse, delete, clear-all |
+| **Accounts** | Sign up / sign in (salted password hashes) or continue as a guest; every user sees only their own data |
+| **Search** | Search box on every page + a results page covering history and favorites |
+| **History** | Database-backed list with search, pagination, reuse, delete, clear-all |
 | **Favorites** | Save / search / reuse / remove |
 | **Dashboard** | KPI cards + 5 Plotly charts, all computed from stored history; empty states when there is no data |
 | **Robustness** | Input & file validation, size limits, timeouts + one retry, friendly errors for quota / network / bad responses |
@@ -35,7 +37,7 @@ takes text in one language, sends it to a real translation API, and returns the 
 Chart colours come from a colour-blind-safe palette that was validated for both light and dark themes.
 
 ## Technologies
-Python 3.10+ · Streamlit · Requests · Pandas · Plotly · gTTS · SQLite · pypdf · python-docx · pytest
+Python 3.10+ · Streamlit · Requests · Pandas · Plotly · gTTS · SQLite (local) / Turso libSQL (optional hosted database) · pypdf · python-docx · pytest
 
 ## System architecture
 ```mermaid
@@ -54,7 +56,7 @@ flowchart LR
     M[(MyMemory API)]
     G[(gTTS)]
   end
-  DB[(SQLite<br/>database/db_manager.py)]
+  DB[(SQLite or hosted libSQL<br/>database/db_manager.py)]
   P --> T & S & D & A
   T --> L
   T --> M
@@ -85,12 +87,13 @@ Document translation adds *upload → validate → extract text* in front of the
 
 ## Database structure
 ```
+users(id PK, username UNIQUE, password_hash, salt, created_at, is_guest)
 translation_history(id PK, original_text, translated_text, source_language,
-                    target_language, timestamp, character_count)
+                    target_language, timestamp, character_count, user_id)
 favorites(id PK, original_text, translated_text, source_language,
-          target_language, created_at)
+          target_language, created_at, user_id)
 ```
-The file is created automatically at `data/linguaai.db` (git-ignored).
+Locally the file is created automatically at `data/linguaai.db` (git-ignored). Older databases are migrated automatically.
 
 ## Installation
 ```bash
@@ -112,8 +115,30 @@ Run the tests:
 pytest -v
 ```
 
-Optional configuration (see `.env.example`): `MYMEMORY_EMAIL` raises MyMemory's free daily quota; `LINGUAAI_DB_PATH` moves the database file.
-No API key is required and no secrets are stored in the repository.
+Optional configuration (see `.env.example`, or Streamlit *Secrets* when deployed):
+
+| Variable | Purpose |
+|---|---|
+| `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` | Use a hosted database so history survives restarts (see below) |
+| `LINGUAAI_TZ` | Time zone for timestamps and "today", e.g. `Asia/Kolkata` (default: server time) |
+| `MYMEMORY_EMAIL` | Raises MyMemory's free daily quota |
+| `LINGUAAI_DB_PATH` | Moves the local SQLite file |
+
+No API key is required to run the app, and no secrets are stored in the repository.
+
+## Deploying on Streamlit Community Cloud (with persistent history)
+Streamlit Cloud's disk is wiped on every restart, so use a free hosted database for history, favorites and accounts:
+
+1. Create a free database at [turso.tech](https://turso.tech) and copy its **URL** (`libsql://…`) and a **database token**.
+2. In Streamlit Cloud open **Manage app → Settings → Secrets** and add:
+   ```toml
+   TURSO_DATABASE_URL = "libsql://your-db-your-org.turso.io"
+   TURSO_AUTH_TOKEN = "your-token"
+   LINGUAAI_TZ = "Asia/Kolkata"
+   ```
+3. Reboot the app. Tables are created automatically.
+
+Without these secrets the app still works, but data lives in temporary local storage. If the hosted database is unreachable the app falls back to local storage and shows a warning. The hosted-database client (`database/remote.py`) uses Turso's documented HTTP API with plain `requests`.
 
 ## Screenshots
 Add your own after running the app (save into `docs/screenshots/`) and reference them here, e.g.:
@@ -142,21 +167,22 @@ raising `ValidationError`, `APIError`, `APITimeoutError` or `QuotaExceededError`
 - MyMemory's free tier has a daily quota and its quality is lower than commercial engines, especially for long or technical text.
 - Auto-detection is a lightweight offline heuristic (script analysis + stop-words); the API's own detection is the fallback.
 - Scanned (image-only) PDFs are not supported (no OCR). Document limit: 5 MB / 20,000 characters.
-- **SQLite is local.** On hosts with ephemeral storage (e.g. Streamlit Community Cloud) history is lost on restart; a hosted
-  deployment would need a persistent database such as PostgreSQL. This project is intended to be run locally.
+- Persistence on Streamlit Community Cloud needs the hosted-database secrets above; otherwise data is lost on restart.
+- Accounts are deliberately simple: username + password, no e-mail verification and **no password recovery**. Guest data is deleted after 24 hours.
+- There is no custom in-app theme button: Streamlit has no supported per-user theme API. Both light and dark themes are defined and chosen via ⋮ → Settings → Theme (default: follows the device).
 - Text-to-speech needs internet access (gTTS calls Google's service).
 
 ## Future enhancements
-Google Cloud / Microsoft Translator providers · persistent cloud database · user accounts · OCR for scanned PDFs ·
-translated DOCX/PDF export · translation memory & glossary · global search.
+Google Cloud / Microsoft Translator providers · e-mail verification and password reset · OCR for scanned PDFs ·
+translated DOCX/PDF export · translation memory & glossary.
 
 ## Project structure
 ```
 app.py                 entry point (navigation, styling)
-pages/                 Home, Translator, Document Translation, History, Favorites, About
-services/              translator, language_detector, speech, document_handler, analytics
-database/              schema.py, db_manager.py
-components/            sidebar, dashboard_cards, charts, translator_ui
+pages/                 Home, Translator, Documents, History, Favorites, About, Search
+services/              translator, language_detector, speech, document_handler, analytics, auth
+database/              schema.py, db_manager.py, remote.py (hosted-DB client)
+components/            sidebar, auth, dashboard_cards, charts, translator_ui
 assets/                logo.png, styles.css
 tests/                 pytest suite
 ```

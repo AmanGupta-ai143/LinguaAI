@@ -4,10 +4,10 @@ import streamlit as st
 from components.dashboard_cards import empty_state
 from components.sidebar import page_header
 from components.translator_ui import reuse_in_translator, save_favorite_button
-from database.db_manager import get_db
+from components.auth import current_db
 
 PAGE_SIZE = 10
-db = get_db()
+db = current_db()
 page_header("Translation history", "Everything you have translated, newest first.")
 
 search = st.text_input("Search", placeholder="Search original or translated text...", label_visibility="collapsed")

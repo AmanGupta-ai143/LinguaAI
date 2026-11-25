@@ -4,9 +4,9 @@ import streamlit as st
 from components.dashboard_cards import empty_state
 from components.sidebar import page_header
 from components.translator_ui import reuse_in_translator
-from database.db_manager import get_db
+from components.auth import current_db
 
-db = get_db()
+db = current_db()
 page_header("Favorites", "Translations you saved for later.")
 
 search = st.text_input("Search", placeholder="Search text or language...", label_visibility="collapsed")

@@ -11,6 +11,14 @@ ASSETS = Path(__file__).resolve().parent.parent / "assets"
 LOGO = ASSETS / "logo.png"
 
 
+def _on_search() -> None:
+    """Enter pressed in the sidebar search box -> remember the query and open the Search page."""
+    query = st.session_state.get("global_q", "").strip()
+    if query:
+        st.session_state["search_q"] = query
+        st.session_state["_goto_search"] = True
+
+
 def load_css() -> None:
     css = (ASSETS / "styles.css").read_text(encoding="utf-8")
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
@@ -25,9 +33,13 @@ def render_sidebar() -> None:
             unsafe_allow_html=True,
         )
         st.caption("Smart Language Translation Platform")
+        st.text_input(
+            "Search", key="global_q", placeholder="🔍 Search history & favorites",
+            label_visibility="collapsed", on_change=_on_search,
+        )
         st.divider()
         st.caption(f"{len(LANGUAGES)} languages supported")
-        st.caption("Tip: switch light/dark theme from the ⋮ menu → Settings.")
+        st.caption("Theme: follows your device. Change it in ⋮ → Settings → Theme.")
 
 
 def page_header(title: str, subtitle: str, chips: list[str] | None = None) -> None:

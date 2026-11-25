@@ -1,5 +1,16 @@
-[theme]
+# Both themes are defined, so the built-in switch (⋮ menu -> Settings -> Theme) looks on-brand
+# in light AND dark. By default Streamlit follows the visitor's device setting.
+[theme.light]
 primaryColor = "#4F6BFF"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F4FB"
+textColor = "#0F1B3D"
+
+[theme.dark]
+primaryColor = "#7C93FF"
+backgroundColor = "#0B1020"
+secondaryBackgroundColor = "#151B33"
+textColor = "#E8ECF8"
 
 [server]
 maxUploadSize = 5

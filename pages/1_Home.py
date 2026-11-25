@@ -1,17 +1,17 @@
 """Home dashboard - KPIs and charts computed from the real translation history."""
 import html
-from datetime import date
 
 import streamlit as st
 
 from components import charts
 from components.dashboard_cards import empty_state, onboarding_card, render_kpis
 from components.sidebar import page_header, render_footer
-from database.db_manager import get_db
+from components.auth import current_db
+from database.db_manager import now_local
 from services import analytics
 from services.translator import LANGUAGES
 
-db = get_db()
+db = current_db()
 stats = db.get_stats()
 df = db.get_history_df()
 total = stats["total_translations"]
@@ -42,7 +42,7 @@ st.write("")
 # ---- KPI cards (every caption below is derived from stored records)
 subs = {}
 if total:
-    today_count = int((df["timestamp"].dt.date == date.today()).sum()) if not df.empty else 0
+    today_count = int((df["timestamp"].dt.date == now_local().date()).sum()) if not df.empty else 0
     top_language = analytics.language_counts(df).iloc[0]["language"] if not df.empty else None
     subs = {
         "total": f"{today_count} today",

@@ -7,7 +7,7 @@ from components.sidebar import page_header
 from components.translator_ui import (
     audio_controls, copy_button, save_favorite_button, source_options, target_options, text_panel,
 )
-from database.db_manager import get_db
+from components.auth import current_db
 from services.translator import (
     AUTO_DETECT, LANGUAGES, MAX_INPUT_CHARS, TranslationError, get_service, swap_languages,
 )
@@ -102,7 +102,7 @@ with left, st.container(border=True):
             }
             ss.pop("audio_cache", None)
             try:
-                get_db().add_translation(ss["tr_result"]["original"], res.translated_text, src_name, ss["tr_tgt"])
+                current_db().add_translation(ss["tr_result"]["original"], res.translated_text, src_name, ss["tr_tgt"])
             except sqlite3.Error as exc:
                 st.warning(f"Translation done, but it could not be saved to history: {exc}")
 

@@ -5,7 +5,7 @@ import streamlit as st
 
 from components.sidebar import page_header
 from components.translator_ui import source_options, target_options, text_panel
-from database.db_manager import get_db
+from components.auth import current_db
 from services.document_handler import (
     ALLOWED_EXTENSIONS, MAX_DOCUMENT_CHARS, MAX_FILE_BYTES, DocumentError, extract_text, format_size,
 )
@@ -55,7 +55,7 @@ if upload is not None:
                 "source": src_name, "target": tgt, "chunks": result.chunks,
             }
             try:
-                get_db().add_translation(text, result.translated_text, src_name, tgt, character_count=len(text))
+                current_db().add_translation(text, result.translated_text, src_name, tgt, character_count=len(text))
             except sqlite3.Error as exc:
                 st.warning(f"Translated, but could not be saved to history: {exc}")
 

@@ -1,7 +1,6 @@
 """Tests for the SQLite layer and the analytics aggregations built on it."""
 import pytest
 
-from database.db_manager import DatabaseManager
 from services.analytics import (
     activity_over_time,
     distribution,
@@ -9,11 +8,6 @@ from services.analytics import (
     source_vs_target,
     weekday_counts,
 )
-
-
-@pytest.fixture()
-def db(tmp_path):
-    return DatabaseManager(tmp_path / "test.db")
 
 
 def add(db, text="Hello", out="नमस्ते", src="English", tgt="Hindi", ts=None):
